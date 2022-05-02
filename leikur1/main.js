@@ -1,6 +1,14 @@
 const canvas = document.querySelector('canvas');
 const c = canvas.getContext('2d');
 
+const width = canvas.width = window.innerWidth;
+const height = canvas.height = window.innerHeight;
+
+function random(min, max) {
+    const num = Math.floor(Math.random() * (max - min + 1)) + min;
+    return num;
+  }
+
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen();
@@ -25,8 +33,8 @@ class skotfæri{
         c.fill();
     }
     skjota(){
-        this.x += this.hradi.x *5;
-        this.y += this.hradi.y *5;
+        this.x += this.hradi.x *20;
+        this.y += this.hradi.y *20;
     }
 }
 const skipHradi = 5;
@@ -46,42 +54,63 @@ let skip = {
     afram: false,
 
 }
-const ovinaHradi = 5;
-const ovinaStaerd = 30;
-ovinaGeymsla = []
+Balls = []
 
-function framleidaOvinir(){
+class Ball {
+
+    constructor(x, y, velX, velY, color, size) {
+       this.x = x;
+       this.y = y;
+       this.velX = velX;
+       this.velY = velY;
+       this.color = color;
+       this.size = size;
+    }
+    draw() {
+        c.beginPath();
+        c.fillStyle = this.color;
+        c.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
+        c.fill();
+      }
+    update() {
+    if ((this.x + this.size) >= width) {
+        this.velX = -(this.velX);
+    }
     
-    let x,y;
-
-    for(var i = 0; i< maxOvinir; i++){
-        x = Math.floor(Math.random() * canvas.width);
-        y = Math.floor(Math.random() * canvas.height);
-        ovinaGeymsla.push(nyrOvinur(x,y))
+    if ((this.x - this.size) <= 0) {
+        this.velX = -(this.velX);
     }
-}
-function nyrOvinur(){
-    let ovinur = {
-        x: x,
-        y: y,
-        xv: Math.random() * ovinaHradi / fps * (Math.random() < 0.5 ? 1 : -1),
-        yv: Math.random() * ovinaHradi / fps * (Math.random() < 0.5 ? 1 : -1),
-        r: ovinaStaerd,
-        a: Math.random() * Math.PI*2,
+    
+    if ((this.y + this.size) >= height) {
+        this.velY = -(this.velY);
     }
-}
-function drawOvinur(x,y){
-    c.beginPath();
-    c.arc(x,y,ovinaStaerd,0,Math.PI * 2,true);
-    c.fillStyle = "Orange";
-    c.fill();
-}
+    
+    if ((this.y - this.size) <= 0) {
+        this.velY = -(this.velY);
+    }
+    
+    this.x += this.velX;
+    this.y += this.velY;
+    }
+    collisionDetect() {
+        for (const ball of Balls) {
+           if (!(this === ball)) {
+              const dx = this.x - ball.x;
+              const dy = this.y - ball.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+     
+              
+           }
+        }
+     }
+    
+ }
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 
 const skotGeymsla = []
-const maxOvinir = 5;
+const maxBalls = 5;
 
 
 
@@ -158,19 +187,39 @@ document.addEventListener("keyup", function(event) {
     }
     event.preventDefault();
   }, true);
+
+while (Balls.length < 6) {
+const size = random(30,50);
+const ball = new Ball(
+    // ball position always drawn at least one ball width
+    // away from the edge of the canvas, to avoid drawing errors
+    random(0 + size,width - size),
+    random(0 + size,height - size),
+    random(-7,7),
+    random(-7,7),
+    "Orange",
+    size
+);
+
+Balls.push(ball);
+};
+
+    for (const ball of Balls) {
+    ball.draw();
+    ball.update();
+    ball.collisionDetect(); 
+    }
+
 // búa til update function sem keyrir allt forritið ínní 30 sinnum á sekundu
 function update() {
     c.clearRect(0,0,canvas.width,canvas.height);
 
-    let x,y,r,a;
-    for(let i = 0; i < ovinaGeymsla.length; i++){
-        x = ovinaGeymsla[i].x;
-        y = ovinaGeymsla[i].y;
-        r = ovinaGeymsla[i].r;
-        a = ovinaGeymsla[i].a;
-        drawOvinur(x + r * Math.cos(a) , y + r * Math.sin(a));
-    }
-
+    
+    for (const ball of Balls) {
+        ball.draw();
+        ball.update();
+        ball.collisionDetect(); 
+      }
     skotGeymsla.forEach((skot) =>{
         skot.draw();
         skot.skjota();
